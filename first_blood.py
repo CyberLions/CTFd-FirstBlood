@@ -24,9 +24,9 @@ def first_blood_listener(mapper, connection, solve):
     challenge_id = solve.challenge_id
 
     result = connection.execute(
-        Solves.__table__
-        .select()
-        .where(Solves.challenge_id == challenge_id)
+        Solves.__table__.select().where(
+            Solves.challenge_id == challenge_id
+        )
     )
 
     solves = result.fetchall()
@@ -67,7 +67,8 @@ def first_blood_settings():
     webhook = get_config("FIRST_BLOOD_WEBHOOK") or ""
     nonce = generate_nonce()
 
-    return render_template_string("""
+    return render_template_string(
+        """
 {% extends "admin/base.html" %}
 {% block content %}
 <div class="container">
@@ -81,3 +82,37 @@ def first_blood_settings():
       <input
         type="text"
         class="form-control"
+        name="webhook"
+        placeholder="https://discord.com/api/webhooks/..."
+        value="{{ webhook }}"
+      >
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">
+      Save Webhook
+    </button>
+
+    <a href="{{ url_for('first_blood_admin.test_webhook') }}"
+       class="btn btn-secondary mt-3 ml-2">
+      Test Webhook
+    </a>
+  </form>
+</div>
+{% endblock %}
+""",
+        webhook=webhook,
+        nonce=nonce,
+    )
+
+
+@admin_blueprint.route("/admin/first-blood/test")
+@admins_only
+def test_webhook():
+    send_discord_webhook("🩸 First Blood test message from CTFd")
+    flash("Test message sent (if webhook is valid)", "info")
+    return redirect(url_for("first_blood_admin.first_blood_settings"))
+
+
+def load(app):
+    app.register_blueprint(admin_blueprint)
+    app.logger.info("First Blood plugin loaded")
