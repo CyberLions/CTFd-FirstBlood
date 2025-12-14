@@ -2,7 +2,6 @@ import requests
 
 from flask import Blueprint, request, redirect, url_for, flash, render_template_string
 from CTFd.models import Solves, Challenges, Users, Teams
-from CTFd.plugins import register_plugin
 from CTFd.utils.events import event_manager
 from CTFd.utils.decorators import admins_only
 from CTFd.utils import config
@@ -32,7 +31,7 @@ def handle_solve_event(event):
 
     challenge_id = solve.challenge_id
 
-    # Check if this is the FIRST solve
+    # FIRST solve only
     solve_count = Solves.query.filter_by(challenge_id=challenge_id).count()
     if solve_count != 1:
         return
@@ -110,10 +109,6 @@ def test_webhook():
 
 
 def load(app):
-    register_plugin(app, name="first_blood")
-
     app.register_blueprint(admin_blueprint)
-
     event_manager.subscribe("challenge.solve", handle_solve_event)
-
     app.logger.info("First Blood plugin loaded")
