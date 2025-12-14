@@ -1,8 +1,8 @@
 import requests
+from sqlalchemy import event
 
 from flask import Blueprint, request, redirect, url_for, flash, render_template_string
 from CTFd.models import Solves, Challenges, Users, Teams
-from CTFd.utils.events import event_manager
 from CTFd.utils.decorators import admins_only
 from CTFd.utils import config
 
@@ -12,29 +12,26 @@ def send_discord_webhook(message):
     if not webhook:
         return
 
-    payload = {"content": message}
-
     try:
-        requests.post(webhook, json=payload, timeout=5)
+        requests.post(webhook, json={"content": message}, timeout=5)
     except Exception:
         pass
 
 
-def handle_solve_event(event):
-    solve_id = event.data.get("solve_id")
-    if not solve_id:
-        return
-
-    solve = Solves.query.filter_by(id=solve_id).first()
-    if not solve:
-        return
-
+@event.listens_for(Solves, "after_insert")
+def first_blood_listener(mapper, connection, solve):
     challenge_id = solve.challenge_id
 
-    # FIRST solve only
-    solve_count = Solves.query.filter_by(challenge_id=challenge_id).count()
-    if solve_count != 1:
-        return
+    # Count solves for this challenge
+    result = connection.execute(
+        Solves.__table__
+        .select()
+        .where(Solves.challenge_id == challenge_id)
+    )
+
+    solves = result.fetchall()
+    if len(solves) != 1:
+        return  # not first blood
 
     challenge = Challenges.query.get(challenge_id)
     user = Users.query.get(solve.user_id)
@@ -110,5 +107,4 @@ def test_webhook():
 
 def load(app):
     app.register_blueprint(admin_blueprint)
-    event_manager.subscribe("challenge.solve", handle_solve_event)
     app.logger.info("First Blood plugin loaded")
