@@ -4,11 +4,11 @@ from sqlalchemy import event
 from flask import Blueprint, request, redirect, url_for, flash, render_template_string
 from CTFd.models import Solves, Challenges, Users, Teams
 from CTFd.utils.decorators import admins_only
-from CTFd.utils import config
+from CTFd.utils.config import get_config, set_config
 
 
 def send_discord_webhook(message):
-    webhook = config.get("FIRST_BLOOD_WEBHOOK")
+    webhook = get_config("FIRST_BLOOD_WEBHOOK")
     if not webhook:
         return
 
@@ -31,7 +31,7 @@ def first_blood_listener(mapper, connection, solve):
 
     solves = result.fetchall()
     if len(solves) != 1:
-        return  # not first blood
+        return
 
     challenge = Challenges.query.get(challenge_id)
     user = Users.query.get(solve.user_id)
@@ -59,11 +59,11 @@ admin_blueprint = Blueprint(
 def first_blood_settings():
     if request.method == "POST":
         webhook = request.form.get("webhook", "").strip()
-        config.set("FIRST_BLOOD_WEBHOOK", webhook)
+        set_config("FIRST_BLOOD_WEBHOOK", webhook)
         flash("First Blood webhook saved", "success")
         return redirect(url_for("first_blood_admin.first_blood_settings"))
 
-    webhook = config.get("FIRST_BLOOD_WEBHOOK") or ""
+    webhook = get_config("FIRST_BLOOD_WEBHOOK") or ""
 
     return render_template_string("""
 {% extends "admin/base.html" %}
