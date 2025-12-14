@@ -2,7 +2,7 @@ import requests
 from sqlalchemy import event
 
 from flask import Blueprint, request, redirect, url_for, flash, render_template_string
-from CTFd.models import Solves, Challenges, Users, Teams, Config, db
+from CTFd.models import Solves, Challenges, Users, Teams, Configs, db
 from CTFd.utils.decorators import admins_only
 from CTFd.utils.config import get_config
 
@@ -58,7 +58,7 @@ admin_blueprint = Blueprint(
 def first_blood_settings():
     if request.method == "POST":
         webhook = request.form.get("webhook", "").strip()
-        Config.set("FIRST_BLOOD_WEBHOOK", webhook)
+        Configs.set("FIRST_BLOOD_WEBHOOK", webhook)
         db.session.commit()
         flash("First Blood webhook saved", "success")
         return redirect(url_for("first_blood_admin.first_blood_settings"))
