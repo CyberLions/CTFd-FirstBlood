@@ -72,6 +72,8 @@ def first_blood_settings():
   <h1>First Blood Settings</h1>
 
   <form method="post">
+    {{ csrf_token() }}
+
     <div class="form-group">
       <label>Discord Webhook URL</label>
       <input
