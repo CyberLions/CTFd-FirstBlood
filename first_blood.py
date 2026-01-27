@@ -97,7 +97,6 @@ def first_blood_settings():
 {% endblock %}
 """,
         webhook=webhook,
-        nonce=nonce,
     )
 
 
