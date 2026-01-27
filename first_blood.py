@@ -5,8 +5,6 @@ from flask import Blueprint, request, redirect, url_for, flash, render_template_
 from CTFd.models import Solves, Challenges, Users, Teams, Configs, db
 from CTFd.utils.decorators import admins_only
 from CTFd.utils.config import get_config
-from CTFd.utils.csrf import generate_nonce
-
 
 def send_discord_webhook(message):
     webhook = get_config("FIRST_BLOOD_WEBHOOK")
@@ -65,7 +63,6 @@ def first_blood_settings():
         return redirect(url_for("first_blood_admin.first_blood_settings"))
 
     webhook = get_config("FIRST_BLOOD_WEBHOOK") or ""
-    nonce = generate_nonce()
 
     return render_template_string(
         """
@@ -75,7 +72,6 @@ def first_blood_settings():
   <h1>First Blood Settings</h1>
 
   <form method="post">
-    <input type="hidden" name="nonce" value="{{ nonce }}">
 
     <div class="form-group">
       <label>Discord Webhook URL</label>
